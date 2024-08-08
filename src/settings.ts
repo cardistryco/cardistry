@@ -1,5 +1,4 @@
-import { render_model } from "./component/render_model";
-import { store_model } from "./core/access_saved_model";
+import { retrieve_model, store_model } from "./core/access_saved_model";
 
 console.log("settings.js loaded");
 
@@ -11,12 +10,15 @@ document
       await store_model((event.target as HTMLSelectElement).value),
   );
 
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === "sync") {
-    if (changes.model) {
-      render_model();
-    }
+chrome.storage.sync.onChanged.addListener((changes) => {
+  if (changes.model) {
+    render_model();
   }
 });
 
 document.addEventListener("DOMContentLoaded", render_model);
+
+async function render_model() {
+  const model = await retrieve_model();
+  (document.getElementById("modelSelect") as HTMLSelectElement).value = model;
+}
