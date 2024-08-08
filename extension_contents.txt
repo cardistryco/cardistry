@@ -1,0 +1,592 @@
+File: ./README.md
+# 🂡 cardistry
+
+---
+
+File: ./llm.sh
+find . -type f -not -name "extension_contents.txt" -not -name "pico.min.css" -not -name "package-lock.json" -not -path '*/\.*' -not -path '*/dist/*' -not -path '*/node_modules/*' -print0 | sort -z | xargs -0 -I {} bash -c 'echo "File: {}"; cat "{}"; echo -e "\n---\n"' > extension_contents.txt
+
+---
+
+File: ./package.json
+{
+  "name": "cardistry",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/chrome": "^0.0.269",
+    "copy-webpack-plugin": "^12.0.2",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.4",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}
+
+---
+
+File: ./public/global.css
+main {
+    width: 400px;
+    max-height: 400px;
+    overflow: auto;
+}
+
+---
+
+File: ./public/manifest.json
+{
+  "manifest_version": 3,
+  "name": "cardistry",
+  "version": "1.0",
+  "description": "open source flashcard generator for webpages",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
+
+---
+
+File: ./public/popup.html
+<!doctype html>
+<html style="max-height: 100px; width: 400px">
+    <head>
+        <title>cardistry</title>
+        <link rel="stylesheet" href="pico.min.css" />
+        <link rel="stylesheet" href="global.css" />
+        <script type="module" src="popup.js"></script>
+    </head>
+    <body>
+        <main class="container">
+            <p style="text-align: right">
+                <a href="settings.html">Settings</a>
+            </p>
+            <button id="generateButton">Generate Flashcard</button>
+            <button id="clearButton">Clear Flashcards</button>
+            <div id="storedContent" style="padding-top: 2rem"></div>
+        </main>
+    </body>
+</html>
+
+---
+
+File: ./public/settings.html
+<!doctype html>
+<html style="max-height: 100px; width: 400px">
+    <head>
+        <title>Cardistry Settings</title>
+        <link rel="stylesheet" href="pico.min.css" />
+        <link rel="stylesheet" href="global.css" />
+        <script type="module" src="settings.js"></script>
+    </head>
+    <body>
+        <main class="container">
+            <p style="text-align: right">
+                <a href="popup.html">Back to Main</a>
+            </p>
+            <h2>Settings</h2>
+            <select id="modelSelect" required>
+                <option value="none"></option>
+                <option value="ollama">Ollama</option>
+                <option value="openai">OpenAI</option>
+            </select>
+
+            <label for="ollamaUrl">Ollama URL:</label>
+            <input
+                type="url"
+                id="ollamaUrl"
+                placeholder="http://localhost:11434"
+            />
+
+            <label for="openaiKey">OpenAI API Key:</label>
+            <input
+                type="password"
+                id="openaiKey"
+                placeholder="Enter your OpenAI API key"
+            />
+        </main>
+    </body>
+</html>
+
+---
+
+File: ./src/adapter/ollama.ts
+import { retrieve_html } from "../core/retrieve_html";
+
+export const setup_ollama_stream = async () => {
+  const pageContent = await retrieve_html();
+  if (!pageContent) {
+    console.error("Will not send to ollama with no page content");
+    return null;
+  }
+  const prompt = generatePrompt(pageContent);
+  console.log("sending request to ollama...");
+  const response = await fetch("http://localhost:11434/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gemma:2b",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      stream: true,
+    }),
+  });
+
+  if (!response.body) {
+    console.error("No response body from Ollama");
+    return null;
+  }
+
+  console.log("response body from Ollama received");
+  return response.body;
+};
+
+const generatePrompt = (pageContent: string) => `
+Help me generate flashcards for a test. This is the format. Pick up where I left off. Make sure to use the divider as well. Follow the form of:
+
+**Question** Write a question here* *Answer** Here's the answer to the question
+---
+**Question** What is the fundamental principle of machine learning, and how does it relate to AI development? **Answer** The fundamental principle of machine learning is the ability of algorithms to learn from and improve through experience with data, without being explicitly programmed. This involves training models on large datasets, allowing them to recognize patterns and make predictions or decisions based on new, unseen data. Importantly, this principle underlies much of modern AI development, enabling systems to adapt to complex tasks and environments in ways that traditional, rule-based programming cannot easily achieve.
+---`;
+// const generatePrompt = (pageContent: string) =>
+//   `As an AI assistant specializing in creating high-value flashcards for lifelong learners, your task is to analyze the given webpage content and create one exceptional flashcard. This flashcard should encapsulate a key concept, relationship, or insight that promotes deep understanding and critical thinking.
+
+//   WEBPAGE CONTENT:
+//   \`\`\`html
+//   ${pageContent}
+//   \`\`\`
+
+//   INSTRUCTIONS:
+//   1. Carefully analyze the webpage content, identifying the most impactful or thought-provoking concept.
+//   2. Formulate a clear, concise question that:
+//      a) Encourages critical thinking or application of knowledge
+//      b) Relates to real-world scenarios or interdisciplinary connections
+//      c) Targets higher-order thinking skills (e.g., analysis, synthesis, evaluation)
+//   3. Craft a comprehensive answer that:
+//      a) Provides a clear, concise explanation
+//      b) Includes relevant details or examples
+//      c) Potentially offers a broader context or implications
+
+//   FORMAT:
+//   Use the following format precisely, ensuring a clear separation between question and answer:
+
+//   [QUESTION]
+//   What is the key concept or insight regarding [topic] as discussed in the content?
+//   ===
+//   [ANSWER]
+//   The key concept is [concise statement of the concept]. This involves [brief explanation of 2-3 sentences]. Importantly, [highlight a crucial implication or application].
+//   ---
+
+//   Now, create one high-value flashcard based on the provided webpage content. Ensure it promotes deep understanding and critical thinking, suitable for dedicated lifelong learners.`;
+
+---
+
+File: ./src/adapter/openai.ts
+
+---
+
+File: ./src/component/render_flashcards.ts
+import { retrieve_flashcards } from "../core/access_saved_cards";
+import { Flashcard } from "../schema/flashcard";
+
+export const render_flashcards = async () => {
+  const flashcards = await retrieve_flashcards();
+  const storedContentDiv = document.getElementById("storedContent");
+  if (!storedContentDiv) {
+    console.error("was unable to find the storedContent id in the DOM");
+    return;
+  }
+
+  if (flashcards && flashcards.length > 0) {
+    storedContentDiv.innerHTML = ""; // Clear existing content
+
+    const gridContainer = document.createElement("div");
+    gridContainer.className = "grid";
+
+    flashcards.forEach((flashcard: Flashcard) => {
+      const cardElement = document.createElement("article");
+      cardElement.className = "card";
+      if (flashcard.status === "CREATED") {
+        cardElement.innerHTML = `
+                <p aria-busy="true">Card is being generated...</p>
+          `;
+      } else if (flashcard.status === "COMPLETED") {
+        cardElement.innerHTML = `
+              ${flashcard.front}
+              <footer>${flashcard.back}</footer>
+          `;
+      }
+      gridContainer.appendChild(cardElement);
+    });
+
+    storedContentDiv.appendChild(gridContainer);
+  } else {
+    storedContentDiv.innerHTML = "<p>No flashcards stored yet.</p>";
+  }
+};
+
+---
+
+File: ./src/component/render_model.ts
+import { retrieve_model } from "../core/access_saved_model";
+
+export const render_model = async () => {
+  const model = await retrieve_model();
+  (document.getElementById("modelSelect") as HTMLSelectElement).value = model;
+};
+
+---
+
+File: ./src/content.ts
+
+---
+
+File: ./src/core/access_saved_cards.ts
+import { Flashcard } from "../schema/flashcard";
+
+export const retrieve_flashcards = async (): Promise<Flashcard[]> =>
+  (await chrome.storage.sync.get(["flashcards"])).flashcards ||
+  ([] as Flashcard[]);
+
+export const store_flashcards = async (flashcards: Flashcard[]) => {
+  await chrome.storage.sync.set({ flashcards: flashcards });
+};
+
+export const retrieve_flashcard = async (id: number): Promise<Flashcard> => {
+  const flashcards = retrieve_flashcards();
+  const flashcard = (await flashcards).find((fc) => fc.id === id);
+
+  if (!flashcard) {
+    console.error("unable to retrieve flashcard:", id);
+    throw `Unable to retrieve flashcard: ${id}`;
+  }
+  return flashcard;
+};
+
+---
+
+File: ./src/core/access_saved_model.ts
+export const retrieve_model = async (): Promise<string> => {
+  return (await chrome.storage.sync.get(["model"])).model || "none";
+};
+
+export const store_model = async (model: string) => {
+  await chrome.storage.sync.set({ model: model });
+};
+
+---
+
+File: ./src/core/generate_card.ts
+import { setup_ollama_stream } from "../adapter/ollama";
+import { Flashcard } from "../schema/flashcard";
+import { store_flashcards, retrieve_flashcards } from "./access_saved_cards";
+
+export const generate_card = async () => {
+  const id = Date.now();
+  await generate_base(id);
+  await stream_content(id);
+};
+
+const generate_base = async (id: number) => {
+  const newFlashcard: Flashcard = {
+    id: id,
+    createdAt: new Date().toISOString(),
+    status: "CREATED",
+  };
+  const flashcards = await retrieve_flashcards();
+  flashcards.unshift(newFlashcard);
+  await store_flashcards(flashcards);
+  console.log("flashcard added successfully.");
+};
+
+const stream_content = async (id: number) => {
+  const stream = await setup_ollama_stream();
+  if (!stream) {
+    console.error("Failed to set up Ollama stream");
+    return;
+  }
+
+  const reader = stream.getReader();
+  let accumulatedContent = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const text = new TextDecoder().decode(value);
+      const jsonData = JSON.parse(text);
+
+      // Extract only the content from the message
+      if (jsonData.message && jsonData.message.content) {
+        accumulatedContent += jsonData.message.content;
+      }
+    }
+  } catch (error) {
+    console.error("Error processing stream:", error);
+  } finally {
+    reader.releaseLock();
+  }
+
+  // Final update to mark the flashcard as completed
+  await finalize_flashcard(id, accumulatedContent);
+};
+
+const finalize_flashcard = async (id: number, content: string) => {
+  const flashcards = await retrieve_flashcards();
+  const cardIndex = flashcards.findIndex((flashcard) => flashcard.id === id);
+
+  if (cardIndex === -1) {
+    console.error("Flashcard not found with id:", id);
+    return;
+  }
+
+  const [front, back] = parse_content(content);
+
+  flashcards[cardIndex] = {
+    ...flashcards[cardIndex],
+    status: "COMPLETED",
+    front: front,
+    back: back,
+  };
+
+  await store_flashcards(flashcards);
+};
+
+const parse_content = (content: string): [string, string] => {
+  // Find the indices of **Question** and **Answer**
+  const questionStart = content.indexOf("**Question**");
+  const answerStart = content.indexOf("**Answer**");
+
+  if (questionStart === -1 || answerStart === -1) {
+    // If we can't find both markers, return the whole content as the question
+    console.log(`parse should be returning: ${[content.trim(), ""]}`);
+    return [content.trim(), ""];
+  }
+
+  // Extract the question (everything between **Question** and **Answer**)
+  const questionContent = content.slice(questionStart + 12, answerStart).trim();
+
+  // Extract the answer (everything after **Answer**)
+  const answerContent = content.slice(answerStart + 10).trim();
+
+  return [questionContent, answerContent];
+};
+
+---
+
+File: ./src/core/retrieve_html.ts
+export const retrieve_html = async () => {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tabs.length < 0 || !tabs[0].id) {
+    console.error("No active tab found!");
+    return;
+  }
+  console.log("about to get innerText");
+  const injectionResults = await chrome.scripting.executeScript({
+    target: { tabId: tabs[0].id },
+    func: () => document.body.innerText,
+  });
+  console.log("script injection success");
+  if (!injectionResults || injectionResults.length === 0) {
+    console.error("No results from script injection!");
+    return;
+  }
+  const pageContent = injectionResults[0].result;
+  if (!pageContent) {
+    console.error("Unable to retrieve page content!");
+    return;
+  }
+  return pageContent;
+};
+
+---
+
+File: ./src/popup.ts
+import { render_flashcards } from "./component/render_flashcards";
+
+document
+  .getElementById("generateButton")
+  ?.addEventListener(
+    "click",
+    async () => await chrome.runtime.sendMessage({ action: "generate_card" }),
+  );
+
+document
+  .getElementById("clearButton")
+  ?.addEventListener(
+    "click",
+    async () => await chrome.storage.sync.set({ flashcards: [] }),
+  );
+
+chrome.storage.sync.onChanged.addListener((changes) => {
+  if (changes.flashcards) {
+    render_flashcards();
+  }
+});
+
+// Initial update of stored content when popup opens
+document.addEventListener("DOMContentLoaded", render_flashcards);
+
+---
+
+File: ./src/schema/flashcard.ts
+import { z } from "zod";
+
+export const fcSchema = z
+  .object({
+    id: z.number(),
+    createdAt: z.string().datetime(),
+    status: z.enum(["IN_PROGRESS", "CREATED", "COMPLETED"]),
+  })
+  .and(
+    z.discriminatedUnion("status", [
+      z.object({
+        status: z.literal("CREATED"),
+      }),
+      z.object({
+        status: z.enum(["IN_PROGRESS", "COMPLETED"]),
+        front: z.string(),
+        back: z.string(),
+      }),
+    ]),
+  );
+
+export type Flashcard = z.infer<typeof fcSchema>;
+
+---
+
+File: ./src/schema/model.ts
+import { z } from "zod";
+
+export const modelSchema = z.object({
+  provider: z.enum(["OLLAMA", "OPENAI"]),
+  model: z.string(),
+  url: z.string(),
+  apiKey: z.string().nullable(),
+});
+
+export type Model = z.infer<typeof modelSchema>;
+
+---
+
+File: ./src/service_worker.ts
+import { generate_card } from "./core/generate_card";
+
+chrome.runtime.onMessage.addListener(async (message) => {
+  if (message.action === "generate_card") {
+    generate_card();
+  }
+});
+
+---
+
+File: ./src/settings.ts
+import { render_model } from "./component/render_model";
+import { store_model } from "./core/access_saved_model";
+
+console.log("settings.js loaded");
+
+document
+  .getElementById("modelSelect")
+  ?.addEventListener(
+    "change",
+    async (event) =>
+      await store_model((event.target as HTMLSelectElement).value),
+  );
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === "sync") {
+    if (changes.model) {
+      render_model();
+    }
+  }
+});
+
+document.addEventListener("DOMContentLoaded", render_model);
+
+---
+
+File: ./tsconfig.json
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
+
+---
+
+File: ./webpack.config.js
+const path = require("path");
+const CopyPlugin = require("copy-webpack-plugin");
+
+module.exports = {
+  mode: "production", // You can change this to 'development' for debugging
+  entry: {
+    service_worker: "./src/service_worker.ts",
+    content: "./src/content.ts",
+    popup: "./src/popup.ts",
+    settings: "./src/settings.ts",
+  },
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "[name].js",
+  },
+  resolve: {
+    extensions: [".ts", ".js"],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        use: "ts-loader",
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  plugins: [
+    new CopyPlugin({
+      patterns: [{ from: "public", to: "." }],
+    }),
+  ],
+};
+
+---
+

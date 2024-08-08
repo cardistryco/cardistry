@@ -1,0 +1,1 @@
+find . -type f -not -name "extension_contents.txt" -not -name "pico.min.css" -not -name "package-lock.json" -not -path '*/\.*' -not -path '*/dist/*' -not -path '*/node_modules/*' -print0 | sort -z | xargs -0 -I {} bash -c 'echo "File: {}"; cat "{}"; echo -e "\n---\n"' > extension_contents.txt

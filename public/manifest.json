@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "cardistry",
+  "version": "1.0",
+  "description": "open source flashcard generator for webpages",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
