@@ -18,11 +18,11 @@ export const render_flashcards = async () => {
     flashcards.forEach((flashcard: Flashcard) => {
       const cardElement = document.createElement("article");
       cardElement.className = "card";
-      if (flashcard.status === "CREATED") {
+      if (flashcard.in_progress) {
         cardElement.innerHTML = `
                 <p aria-busy="true">Card is being generated...</p>
           `;
-      } else if (flashcard.status === "COMPLETED") {
+      } else {
         cardElement.innerHTML = `
               ${flashcard.front}
               <footer>${flashcard.back}</footer>
@@ -35,4 +35,5 @@ export const render_flashcards = async () => {
   } else {
     storedContentDiv.innerHTML = "<p>No flashcards stored yet.</p>";
   }
+  console.log("Cards rerendered");
 };

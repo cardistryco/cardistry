@@ -5,7 +5,6 @@ module.exports = {
   mode: "production", // You can change this to 'development' for debugging
   entry: {
     service_worker: "./src/service_worker.ts",
-    content: "./src/content.ts",
     popup: "./src/popup.ts",
     settings: "./src/settings.ts",
   },

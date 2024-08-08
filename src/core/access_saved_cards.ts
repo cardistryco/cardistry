@@ -18,3 +18,15 @@ export const retrieve_flashcard = async (id: number): Promise<Flashcard> => {
   }
   return flashcard;
 };
+
+export const store_flashcard = async (flashcard: Flashcard) => {
+  const flashcards = await retrieve_flashcards();
+  const cardIndex = flashcards.findIndex((fc) => flashcard.id === fc.id);
+  if (cardIndex === -1) {
+    flashcards.unshift(flashcard);
+    await store_flashcards(flashcards);
+  } else {
+    flashcards[cardIndex] = flashcard;
+    await store_flashcards(flashcards);
+  }
+};
