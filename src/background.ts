@@ -22,6 +22,8 @@ const create_new_card = () => ({
 });
 
 const generate_card_content = async (html: string) => {
+  const test = async () => console.log(generatePrompt(await retrieve_html()));
+  test();
   const request = getOllamaRequest(html);
   const response = await fetch("http://localhost:11434/api/chat", request);
   const { message } = await response.json();
@@ -47,12 +49,11 @@ export const getOllamaRequest = (html: string) => ({
 });
 
 const generatePrompt = (pageContent: string) => `
-Help me generate flashcards for a test. This is the format. Pick up where I left off. Make sure to use the divider as well. Follow the form of:
+  Help me generate a single flashcard based on the below content.
 
-**Question** Write a question here* *Answer** Here's the answer to the question
----
-**Question** What is the fundamental principle of machine learning, and how does it relate to AI development? **Answer** The fundamental principle of machine learning is the ability of algorithms to learn from and improve through experience with data, without being explicitly programmed. This involves training models on large datasets, allowing them to recognize patterns and make predictions or decisions based on new, unseen data. Importantly, this principle underlies much of modern AI development, enabling systems to adapt to complex tasks and environments in ways that traditional, rule-based programming cannot easily achieve.
----`;
+  <start_page_content>
+  ${pageContent}
+  <end_page_content>`;
 
 const parse_content = (content: string): [string, string] => {
   // Find the indices of **Question** and **Answer**
