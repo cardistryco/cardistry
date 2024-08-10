@@ -1,54 +1,50 @@
-import { retrieve_flashcards } from "./core/access_saved_cards";
-import { Flashcard } from "./schema/flashcard";
+import {
+  addCardsListener,
+  retrieveCards,
+  storeCards,
+} from "./core/cardStorage";
+import { Card } from "./schema/Card";
 
 document
   .getElementById("generateButton")
-  ?.addEventListener(
-    "click",
-    async () => await chrome.runtime.sendMessage({ action: "generate_card" }),
+  ?.addEventListener("click", () =>
+    chrome.runtime.sendMessage({ action: "generate_card" }),
   );
 
 document
   .getElementById("clearButton")
-  ?.addEventListener(
-    "click",
-    async () => await chrome.storage.sync.set({ flashcards: [] }),
-  );
+  ?.addEventListener("click", () => storeCards([]));
 
-chrome.storage.sync.onChanged.addListener((changes) => {
-  if (changes.flashcards) {
-    render_flashcards();
-  }
-});
+addCardsListener(render_cards);
 
 // Initial update of stored content when popup opens
-document.addEventListener("DOMContentLoaded", render_flashcards);
+document.addEventListener("DOMContentLoaded", render_cards);
 
-async function render_flashcards() {
-  const flashcards = await retrieve_flashcards();
+async function render_cards() {
+  const cards = await retrieveCards();
   const storedContentDiv = document.getElementById("storedContent");
   if (!storedContentDiv) {
     console.error("was unable to find the storedContent id in the DOM");
     return;
   }
 
-  if (flashcards && flashcards.length > 0) {
+  if (cards && cards.length > 0) {
     storedContentDiv.innerHTML = ""; // Clear existing content
 
     const gridContainer = document.createElement("div");
     gridContainer.className = "grid";
 
-    flashcards.forEach((flashcard: Flashcard) => {
+    cards.forEach((card: Card) => {
       const cardElement = document.createElement("article");
       cardElement.className = "card";
-      if (flashcard.in_progress) {
+      if (card.in_progress) {
         cardElement.innerHTML = `
                 <p aria-busy="true">Card is being generated...</p>
           `;
       } else {
         cardElement.innerHTML = `
-              ${flashcard.front}
-              <footer>${flashcard.back}</footer>
+              ${card.front}
+              <footer>${card.back}</footer>
           `;
       }
       gridContainer.appendChild(cardElement);
@@ -56,7 +52,7 @@ async function render_flashcards() {
 
     storedContentDiv.appendChild(gridContainer);
   } else {
-    storedContentDiv.innerHTML = "<p>No flashcards stored yet.</p>";
+    storedContentDiv.innerHTML = "<p>No cards created yet.</p>";
   }
   console.log("Cards rerendered");
 }

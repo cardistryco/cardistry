@@ -1,16 +1,14 @@
-import { store_flashcard } from "./core/access_saved_cards";
+import { addCard, updateCard } from "./core/cardStorage";
 import { retrieve_html } from "./core/retrieve_html";
 
 chrome.runtime.onMessage.addListener(async (message) => {
   if (message.action === "generate_card") {
-    const flashcard = create_new_card();
-    await store_flashcard(flashcard);
+    const card = create_new_card();
+    await addCard(card);
     const html_content = await retrieve_html();
     const { front, back } = await generate_card_content(html_content);
-    const card_with_content = { ...flashcard, front, back, in_progress: false };
-    console.log("storing card...");
-    await store_flashcard(card_with_content);
-    console.log("store complete");
+    const contentfulCard = { ...card, front, back, in_progress: false };
+    await updateCard(contentfulCard.id, contentfulCard);
   }
 });
 

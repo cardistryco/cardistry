@@ -19,8 +19,8 @@ export async function retrieveLMAdapter(
 export function addLMAdaptersChangeListener(
   callback: (adapters: LMAdapter[]) => void,
 ): void {
-  chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === "sync" && changes.adapters) {
+  chrome.storage.sync.onChanged.addListener((changes) => {
+    if (changes.adapters) {
       callback(changes.adapters.newValue);
     }
   });
