@@ -20,14 +20,14 @@ async function updateAndStoreAdapters() {
       provider: "ollama",
       name: "Ollama",
       url: ollamaUrl.value || "http://localhost:11434",
-      is_selected: selectedModel === "ollama",
+      enabled: selectedModel === "ollama",
     },
     {
       provider: "openai",
       name: "OpenAI",
       url: "https://api.openai.com/v1",
       apiKey: openaiKey.value,
-      is_selected: selectedModel === "openai",
+      enabled: selectedModel === "openai",
     },
   ];
 
@@ -55,7 +55,7 @@ async function loadStoredAdapters() {
     const openaiKey = document.getElementById("openaiKey") as HTMLInputElement;
 
     adapters.forEach((adapter: LMAdapter) => {
-      if (adapter.is_selected) {
+      if (adapter.enabled) {
         modelSelect.value = adapter.provider;
       }
       if (adapter.provider === "ollama") {

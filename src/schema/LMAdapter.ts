@@ -3,5 +3,5 @@ export type LMAdapter = {
   name: string;
   url: string;
   apiKey?: string;
-  is_selected: boolean;
+  enabled: boolean;
 };

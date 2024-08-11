@@ -37,7 +37,7 @@ async function render_cards() {
     cards.forEach((card: Card) => {
       const cardElement = document.createElement("article");
       cardElement.className = "card";
-      if (card.in_progress) {
+      if (!card.isFinished) {
         cardElement.innerHTML = `
                 <p aria-busy="true">Card is being generated...</p>
           `;

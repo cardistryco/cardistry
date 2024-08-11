@@ -7,21 +7,19 @@ chrome.runtime.onMessage.addListener(async (message) => {
     await addCard(card);
     const html_content = await retrieve_html();
     const { front, back } = await generate_card_content(html_content);
-    const contentfulCard = { ...card, front, back, in_progress: false };
+    const contentfulCard = { ...card, front, back, isFinished: false };
     await updateCard(contentfulCard.id, contentfulCard);
   }
 });
 
 const create_new_card = () => ({
   id: Date.now(),
-  in_progress: true,
+  isFinished: false,
   front: "",
   back: "",
 });
 
 const generate_card_content = async (html: string) => {
-  const test = async () => console.log(generatePrompt(await retrieve_html()));
-  test();
   const request = getOllamaRequest(html);
   const response = await fetch("http://localhost:11434/api/chat", request);
   const { message } = await response.json();
