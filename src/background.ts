@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { retrieveLMAdapter } from "./core/adapterStorage";
 import { addCard, updateCard } from "./core/cardStorage";
-import { retrieve_html } from "./core/retrieve_html";
+import { extractPageContent } from "./core/pageText";
 import { z } from "zod";
 
 chrome.runtime.onMessage.addListener(async (message) => {
@@ -12,7 +12,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const card = generateNewCard();
     await addCard(card);
     console.log("New card added:", card);
-    const html_content = await retrieve_html();
+    const html_content = await extractPageContent();
     console.log("Retrieved HTML content, length:", html_content.length);
     const { front, back } = await generateCardContent(html_content);
     const contentfulCard = { ...card, front, back, isFinished: true };

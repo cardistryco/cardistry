@@ -1,4 +1,4 @@
-export const retrieve_html = async () => {
+export const extractPageContent = async () => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tabs.length < 0 || !tabs[0].id) {
     throw "No active tab found!";
