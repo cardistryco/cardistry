@@ -6,14 +6,13 @@ export async function storeLMAdapters(adapters: LMAdapter[]): Promise<void> {
 
 export async function retrieveLMAdapters(): Promise<LMAdapter[]> {
   const { adapters } = await chrome.storage.sync.get("adapters");
+  console.log(`retrived adapters: ${JSON.stringify(adapters)}`);
   return adapters || [];
 }
 
-export async function retrieveLMAdapter(
-  provider: string,
-): Promise<LMAdapter | undefined> {
+export async function retrieveLMAdapter(): Promise<LMAdapter | undefined> {
   const adapters = await retrieveLMAdapters();
-  return adapters.find((adapter) => adapter.provider === provider);
+  return adapters.find((adapter) => adapter.enabled === true);
 }
 
 export function addLMAdaptersChangeListener(
