@@ -1,4 +1,10 @@
-# 🂡 cardistry
+<p align="center">
+  <img src="public/logo.png" alt="Bitwarden" />
+</p>
+
+---
+
+# cardistry
 
 Cardistry is an open-source flashcard generator Chrome extension for webpages. It uses AI to create flashcards from the content of the current webpage, helping users to learn and retain information more effectively.
 
