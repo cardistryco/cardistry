@@ -48,11 +48,21 @@ async function render_cards() {
       } else {
         cardElement.innerHTML = `
           <div class="card-content" style="display: flex; flex-direction: column; height: 100%; padding-right: 3rem;">
-            <div class="front" style="flex: 1; padding: var(--pico-spacing); background-color: var(--pico-card-background-color);">
-              ${card.front}
+            <div class="front" style="flex: 1; padding: var(--pico-spacing); background-color: var(--pico-card-background-color); position: relative; display: flex; flex-direction: column;">
+              <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                <button class="copy-btn" data-content="front" style="background: none; border: none; cursor: pointer; color: #3A70B0;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
+              <div class="content" style="flex: 1; overflow-y: auto;">${card.front}</div>
             </div>
-            <div class="back" style="flex: 1; padding: var(--pico-spacing); background-color: var(--pico-card-sectioning-background-color);">
-              ${card.back}
+            <div class="back" style="flex: 1; padding: var(--pico-spacing); background-color: var(--pico-card-sectioning-background-color); position: relative; display: flex; flex-direction: column;">
+              <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                <button class="copy-btn" data-content="back" style="background: none; border: none; cursor: pointer; color: #3A70B0;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
+              <div class="content" style="flex: 1; overflow-y: auto;">${card.back}</div>
             </div>
           </div>
           <nav class="card-nav" style="position: absolute; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; width: 3rem; background-color: var(--pico-card-border-color); border-left: var(--pico-border-width) solid var(--pico-card-border-color);">
@@ -79,16 +89,35 @@ async function render_cards() {
           const cardId = (e.currentTarget as HTMLElement).dataset.cardId;
           if (cardId) exportCard(parseInt(cardId, 10));
         });
+
+        // Add event listeners for copy buttons
+        const copyButtons = cardElement.querySelectorAll(".copy-btn");
+        copyButtons.forEach((button) => {
+          button.addEventListener("click", (e) => {
+            e.preventDefault();
+            const contentType = (e.currentTarget as HTMLElement).dataset
+              .content;
+            const content = contentType === "front" ? card.front : card.back;
+            copyToClipboard(content);
+          });
+        });
       }
       gridContainer.appendChild(cardElement);
     });
     storedContentDiv.appendChild(gridContainer);
 
-    // Add hover effect for nav buttons
+    // Add hover effect for nav buttons and copy buttons
     const style = document.createElement("style");
     style.textContent = `
-      .card-nav a:hover {
+      .card-nav a:hover, .copy-btn:hover {
         background-color: var(--pico-card-background-color);
+      }
+      .copy-btn {
+        opacity: 0.7;
+        transition: opacity 0.2s ease-in-out;
+      }
+      .copy-btn:hover {
+        opacity: 1;
       }
     `;
     document.head.appendChild(style);
@@ -101,4 +130,16 @@ async function render_cards() {
 function exportCard(cardId: number) {
   // Implement export functionality
   console.log(`Export card with ID: ${cardId} (Functionality is TODO)`);
+}
+
+function copyToClipboard(text: string) {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      console.log("Content copied to clipboard");
+      // Optionally, you can show a temporary notification to the user
+    })
+    .catch((err) => {
+      console.error("Failed to copy: ", err);
+    });
 }
