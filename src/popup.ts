@@ -1,5 +1,6 @@
 import {
   addCardsListener,
+  deleteCard,
   retrieveCards,
   storeCards,
 } from "./core/cardStorage";
@@ -28,7 +29,7 @@ async function render_cards() {
     return;
   }
   if (cards && cards.length > 0) {
-    storedContentDiv.innerHTML = ""; // Clear existing content
+    storedContentDiv.innerHTML = "";
     const gridContainer = document.createElement("div");
     gridContainer.className = "grid";
     cards.forEach((card: Card) => {
@@ -38,7 +39,7 @@ async function render_cards() {
       cardElement.style.display = "flex";
       cardElement.style.overflow = "hidden";
       cardElement.style.flexDirection = "column";
-      cardElement.style.height = "100%"; // Ensure the card takes full height
+      cardElement.style.height = "100%";
 
       if (!card.isFinished) {
         cardElement.innerHTML = `
@@ -55,14 +56,29 @@ async function render_cards() {
             </div>
           </div>
           <nav class="card-nav" style="position: absolute; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; width: 3rem; background-color: var(--pico-card-border-color); border-left: var(--pico-border-width) solid var(--pico-card-border-color);">
-            <a href="#" class="secondary" data-tooltip="Delete" onclick="deleteCard(${card.id})" style="display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; margin: 0.5rem auto; border-radius: 50%; transition: background-color var(--pico-transition);color: #3A70B0;">
+            <a href="#" class="secondary delete-card" data-card-id="${card.id}" data-tooltip="Delete" style="display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; margin: 0.5rem auto; border-radius: 50%; transition: background-color var(--pico-transition); color: #3A70B0;">
               <svg xmlns="http://www.w3.org/2000/svg" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             </a>
-            <a href="#" class="secondary" data-tooltip="Export" onclick="exportCard(${card.id})" style="display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; margin: 0.5rem auto; border-radius: 50%; transition: background-color var(--pico-transition); color: #3A70B0;">
+            <a href="#" class="secondary export-card" data-card-id="${card.id}" data-tooltip="Export" style="display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; margin: 0.5rem auto; border-radius: 50%; transition: background-color var(--pico-transition); color: #3A70B0;">
               <svg xmlns="http://www.w3.org/2000/svg" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </a>
           </nav>
         `;
+
+        // Add event listeners for delete and export buttons
+        const deleteButton = cardElement.querySelector(".delete-card");
+        deleteButton?.addEventListener("click", (e) => {
+          e.preventDefault();
+          const cardId = (e.currentTarget as HTMLElement).dataset.cardId;
+          if (cardId) deleteCard(parseInt(cardId, 10));
+        });
+
+        const exportButton = cardElement.querySelector(".export-card");
+        exportButton?.addEventListener("click", (e) => {
+          e.preventDefault();
+          const cardId = (e.currentTarget as HTMLElement).dataset.cardId;
+          if (cardId) exportCard(parseInt(cardId, 10));
+        });
       }
       gridContainer.appendChild(cardElement);
     });
@@ -82,13 +98,7 @@ async function render_cards() {
   console.log("Cards rerendered");
 }
 
-// Add these functions to handle delete and export actions
-function deleteCard(cardId) {
-  // Implement delete functionality
-  console.log(`Delete card with ID: ${cardId}`);
-}
-
-function exportCard(cardId) {
+function exportCard(cardId: number) {
   // Implement export functionality
-  console.log(`Export card with ID: ${cardId}`);
+  console.log(`Export card with ID: ${cardId} (Functionality is TODO)`);
 }

@@ -9,7 +9,7 @@ export async function retrieveCards(): Promise<Card[]> {
   return cards || [];
 }
 
-export async function retrievCard(id: number): Promise<Card | undefined> {
+export async function retrieveCard(id: number): Promise<Card | undefined> {
   const cards = await retrieveCards();
   return cards.find((c) => c.id === id);
 }
@@ -29,6 +29,12 @@ export async function addCard(card: Card) {
     throw new Error(`Cannot add Card w/ id ${card.id} (already exists)`);
   cards.unshift(card);
   await storeCards(cards);
+}
+
+export async function deleteCard(id: number) {
+  const cards = await retrieveCards();
+  const newCards = cards.filter((card) => card.id !== id);
+  await storeCards(newCards);
 }
 
 export function addCardsListener(callback: (cards: Card[]) => void) {
