@@ -48,21 +48,25 @@ async function render_cards() {
       } else {
         cardElement.innerHTML = `
           <div class="card-content" style="display: flex; flex-direction: column; height: 100%; padding-right: 3rem;">
-            <div class="front" style="flex: 1; padding: var(--pico-spacing); background-color: var(--pico-card-background-color); position: relative; display: flex; flex-direction: column;">
-              <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                <button class="copy-btn" data-content="front" style="background: none; border: none; cursor: pointer; color: #3A70B0;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                </button>
+            <div class="front" style="flex: 1; padding: var(--pico-spacing); background-color: var(--pico-card-background-color); position: relative;">
+              <div class="container" style="display: grid; grid-template-columns: 4fr 1fr; grid-template-rows: 1fr; grid-column-gap: 20px; grid-row-gap: 20px; justify-items: stretch; align-items: stretch; height: 100%;">
+                <div class="content" style="overflow-y: auto;">${card.front}</div>
+                <div style="display: flex; justify-content: center; align-items: center;">
+                  <button class="copy-btn" data-content="front" style="background: none; border: none; cursor: pointer; color: #3A70B0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                </div>
               </div>
-              <div class="content" style="flex: 1; overflow-y: auto;">${card.front}</div>
             </div>
-            <div class="back" style="flex: 1; padding: var(--pico-spacing); background-color: var(--pico-card-sectioning-background-color); position: relative; display: flex; flex-direction: column;">
-              <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                <button class="copy-btn" data-content="back" style="background: none; border: none; cursor: pointer; color: #3A70B0;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                </button>
+            <div class="back" style="flex: 1; padding: var(--pico-spacing); background-color: var(--pico-card-sectioning-background-color); position: relative;">
+              <div class="container" style="display: grid; grid-template-columns: 4fr 1fr; grid-template-rows: 1fr; grid-column-gap: 20px; grid-row-gap: 20px; justify-items: stretch; align-items: stretch; height: 100%;">
+                <div class="content" style="overflow-y: auto;">${card.back}</div>
+                <div style="display: flex; justify-content: center; align-items: center;">
+                  <button class="copy-btn" data-content="back" style="background: none; border: none; cursor: pointer; color: #3A70B0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                </div>
               </div>
-              <div class="content" style="flex: 1; overflow-y: auto;">${card.back}</div>
             </div>
           </div>
           <nav class="card-nav" style="position: absolute; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; width: 3rem; background-color: var(--pico-card-border-color); border-left: var(--pico-border-width) solid var(--pico-card-border-color);">
