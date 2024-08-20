@@ -53,7 +53,8 @@ const generateCardContent = async (html: string) => {
       messages: [
         {
           role: "system",
-          content: "Generate an enriching flashcard from the content below.",
+          content:
+            "Generate an enriching flashcard from the content below. Make it short and informative. Don't do surface level, pick a piece of information and dig into it. Do not write a pararaph. 1-2 sentences max.",
         },
         {
           role: "user",
@@ -86,32 +87,6 @@ export const getOllamaRequest = (html: string) => ({
         content: generatePrompt(html),
       },
     ],
-    stream: false,
-  }),
-});
-
-export const getOpenAIRequest = (html: string, apiKey: string) => ({
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
-  },
-  body: JSON.stringify({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a helpful assistant that creates flashcards based on provided content.",
-      },
-      {
-        role: "user",
-        content: generatePrompt(html),
-      },
-    ],
-    temperature: 0.7,
-    max_tokens: 150, // Adjust this value based on your needs
-    n: 1,
     stream: false,
   }),
 });
