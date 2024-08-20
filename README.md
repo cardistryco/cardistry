@@ -2,6 +2,10 @@
   <img src="public/logo.png" alt="Bitwarden" />
 </p>
 
+<p align="center">
+  <img src="public/demo.gif" alt="Cardistry in action" />
+</p>
+
 ---
 
 # cardistry
